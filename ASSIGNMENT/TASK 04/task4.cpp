@@ -88,3 +88,26 @@ int main()
 
     return 0;
 }
+
+*/ALTERNATIVE CONCEPT/*
+    #include <iostream>
+#include <deque>
+using namespace std;
+
+int main()
+{
+    deque<double> transactions;
+
+    transactions.push_back(1000);
+    transactions.push_back(-500);
+    transactions.push_back(2000);
+
+    while (transactions.size() > 10)
+        transactions.pop_front();
+
+    for (int i = 0; i < transactions.size(); i++)
+        cout << transactions[i] << '\n';
+
+    return 0;
+}
+    
