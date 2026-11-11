@@ -1,0 +1,311 @@
+# Q1 – Call by Value, by Reference and by Pointer
+
+## 1. Call by Value, Call by Reference and Call by Pointer
+
+The hostel office provides different concessions to students:
+
+- Merit concession – 10%
+- Sports concession – 15%
+- Single-parent concession – 25%
+
+In C++, a function can receive data in three ways: call by value, call by reference and call by pointer.
+
+### A. Call by Value
+
+In call by value, a copy of the original fee is passed to the function. Any changes made inside the function will not affect the original fee.
+
+### B. Call by Reference
+
+In call by reference, the function receives a reference to the original variable. Changes made inside the function directly affect the caller's fee.
+
+### C. Call by Pointer
+
+In call by pointer, the address of the original fee is passed to the function. Using the pointer, the function can modify the original value.
+
+## 2. C++ Program – Three Methods
+
+```cpp
+#include <iostream>
+using namespace std;
+
+// Call by value
+void applyByValue(long long fee, int percent)
+{
+    fee = fee - fee * percent / 100;
+}
+
+// Call by reference
+void applyByReference(long long& fee, int percent)
+{
+    fee = fee - fee * percent / 100;
+}
+
+// Call by pointer
+void applyByPointer(long long* fee, int percent)
+{
+    if (fee != nullptr)
+        *fee = *fee - (*fee * percent / 100);
+}
+
+int main()
+{
+    long long fee1 = 45000;
+    long long fee2 = 45000;
+    long long fee3 = 45000;
+
+    applyByValue(fee1, 10);
+    applyByReference(fee2, 15);
+    applyByPointer(&fee3, 25);
+
+    cout << "After call by value: " << fee1 << '\n';
+    cout << "After call by reference: " << fee2 << '\n';
+    cout << "After call by pointer: " << fee3 << '\n';
+
+    return 0;
+}
+```
+
+### Predicted Output
+
+```text
+After call by value: 45000
+After call by reference: 38250
+After call by pointer: 33750
+```
+
+### Explanation
+
+- Call by value: The original fee remains 45000 because only its copy is modified.
+- Call by reference: The original fee becomes 38250 after the 15% sports concession.
+- Call by pointer: The original fee becomes 33750 after the 25% single-parent concession.
+
+## 3. Inquiry
+
+### Where is each parameter stored?
+
+**Call by Value:**
+- A separate copy of the fee is created.
+- The function modifies only this local copy.
+- The original variable remains unchanged.
+
+**Call by Reference:**
+- The reference refers to the original variable.
+- No separate copy of the fee is created.
+- Changes directly affect the original variable.
+
+**Call by Pointer:**
+- The address of the original variable is passed.
+- The pointer stores that address.
+- Using `*`, the function can modify the original value.
+
+### Why do only two methods change the caller's fee?
+
+Call by reference and call by pointer can access the original variable. Therefore, changes made through them affect the caller's fee.
+
+Call by value only modifies a separate copy, so the original fee does not change.
+
+### When should a const reference be used?
+
+A `const` reference should be used when a function needs to read a variable without modifying it.
+
+It avoids making a copy of large objects and also prevents accidental changes.
+
+Example:
+
+```cpp
+void displayFee(const long long& fee)
+{
+    cout << fee;
+}
+```
+
+## 4. Design Decision
+
+When several concessions are applied to one student, I would prefer returning the updated fee instead of changing it directly through a reference.
+
+This makes the calculation easier to understand and allows the returned value to be stored or used for another calculation.
+
+Example:
+
+```cpp
+long long applyConcession(long long fee, int percent)
+{
+    fee = fee - fee * percent / 100;
+    return fee;
+}
+```
+
+The returned fee can be used for multiple concessions:
+
+```cpp
+fee = applyConcession(fee, 10);
+fee = applyConcession(fee, 15);
+```
+
+This approach makes the changes clear because the updated fee is explicitly assigned.
+
+## 5. Predict the Output
+
+Given program:
+
+```cpp
+#include <iostream>
+
+void change(int a, int& b, int* c)
+{
+    a += 10;
+    b += 10;
+    *c += 10;
+}
+
+int& bigger(int& p, int& q)
+{
+    return p > q ? p : q;
+}
+
+void show(int x, int y = 5, int z = 10)
+{
+    std::cout << x + y + z << ' ';
+}
+
+int main()
+{
+    int a = 1, b = 2, c = 3;
+
+    change(a, b, &c);
+    std::cout << a << ' ' << b << ' ' << c << '\n';
+
+    bigger(a, c) = 100;
+    std::cout << a << ' ' << c << '\n';
+
+    show(1);
+    show(1, 2);
+    show(1, 2, 3);
+    std::cout << '\n';
+}
+```
+
+### My Predicted Output
+
+```text
+1 12 13
+1 100
+16 13 6
+```
+
+### Explanation
+
+**First function call:**
+
+`change(a, b, &c);`
+
+- `a` is passed by value, so its original value remains 1.
+- `b` is passed by reference, so it becomes 12.
+- `c` is passed by pointer, so it becomes 13.
+
+**Second function call:**
+
+`bigger(a, c) = 100;`
+
+- The function returns a reference to the larger variable.
+- Since `c` is larger than `a`, it returns a reference to `c`.
+- Therefore, `c` becomes 100.
+
+**Default arguments in show():**
+
+- `show(1)` uses default values `y = 5` and `z = 10`. Result = 16.
+- `show(1, 2)` uses default value `z = 10`. Result = 13.
+- `show(1, 2, 3)` uses all the given arguments. Result = 6.
+
+## 6. Complete the Code
+
+### Completed TODO 1
+
+The reference parameter allows the function to modify the caller's original fee.
+
+```cpp
+#include <iostream>
+
+void applyByValue(long long fee, int percent)
+{
+    fee -= fee * percent / 100;
+}
+
+void applyConcession(long long& fee, int percent)
+{
+    fee -= fee * percent / 100;
+}
+
+int main()
+{
+    long long hostelFee = 45000;
+
+    applyByValue(hostelFee, 10);
+
+    std::cout << "after call by value   : "
+              << hostelFee << '\n';
+
+    applyConcession(hostelFee, 10);
+
+    std::cout << "after call by reference: "
+              << hostelFee << '\n';
+}
+```
+
+### Expected Output
+
+```text
+after call by value   : 45000
+after call by reference: 40500
+```
+
+### Why does call by value leave the fee at 45000?
+
+In call by value, a separate copy of `hostelFee` is passed to the function. The 10% concession is applied only to that copy. Therefore, the original hostel fee remains 45000.
+
+In call by reference, the original variable is modified directly, so the fee becomes 40500.
+
+## 7. Alternative Concept and Complexity Analysis
+
+Another method is to return the updated fee from the function instead of modifying it using a reference.
+
+Example:
+
+```cpp
+long long applyConcession(long long fee, int percent)
+{
+    return fee - fee * percent / 100;
+}
+```
+
+The caller can update the fee using:
+
+```cpp
+hostelFee = applyConcession(hostelFee, 10);
+```
+
+### Time Complexity
+
+All three methods take **O(1)** time because each function performs only a fixed number of arithmetic operations.
+
+### Space Complexity
+
+- **Call by Value:** Creates a copy of the variable. A `long long` usually occupies 8 bytes.
+- **Call by Reference:** Does not copy the original object; it accesses the existing variable.
+- **Call by Pointer:** Passes the variable's address instead of copying the object.
+- **Call by Const Reference:** Avoids copying the object and prevents modification.
+
+When a large `Student` object is passed by value, the entire object is copied, requiring additional memory. Passing it by reference or const reference avoids this object copy.
+
+### Comparison
+
+| Method | Changes original fee? | Time Complexity |
+|---|---|---|
+| Call by Value | No | O(1) |
+| Call by Reference | Yes | O(1) |
+| Call by Pointer | Yes | O(1) |
+| Return by Value | Only when assigned | O(1) |
+
+### Conclusion
+
+From this task, I understood the difference between call by value, reference and pointer. Call by value does not modify the original variable, whereas reference and pointer can modify it. For applying multiple concessions, returning the updated fee is a clear and easy-to-maintain approach.
