@@ -1,0 +1,236 @@
+# Q3 – Default Arguments and Function Overloading
+
+## 1. Introduction
+
+A courier service calculates delivery charges based on the parcel's weight. Customers can also choose express delivery and insurance.
+
+The original program contains three functions:
+
+```cpp
+charge(double weight);
+charge(double weight, bool express);
+charge(double weight, bool express = false, bool insured = false);
+```
+
+This causes an **ambiguous function call** because the compiler finds more than one function that can handle the same call using default arguments.
+
+For example, `charge(2)` can match all three functions. Therefore, the compiler cannot decide which function should be called.
+
+## 2. Redesigned Function Overloading
+
+To avoid ambiguity, I designed three overloaded functions:
+
+- `int` for weight in grams.
+- `double` for weight in kilograms.
+- `Parcel` for a parcel object.
+
+Default arguments are used for express delivery and insurance so that customers do not have to provide every argument.
+
+## 3. C++ Program
+
+```cpp
+#include <iostream>
+using namespace std;
+
+struct Parcel
+{
+    double weight;
+};
+
+// Weight in grams
+double charge(int grams, bool express = false, bool insured = false)
+{
+    double amount = grams * 0.04;
+
+    if (express)
+        amount += 20;
+
+    if (insured)
+        amount += 10;
+
+    cout << "Integer overload selected. ";
+    return amount;
+}
+
+// Weight in kilograms
+double charge(double kg, bool express = false, bool insured = false)
+{
+    double amount = kg * 40;
+
+    if (express)
+        amount += 20;
+
+    if (insured)
+        amount += 10;
+
+    cout << "Double overload selected. ";
+    return amount;
+}
+
+// Parcel object
+double charge(Parcel p, bool express = false, bool insured = false)
+{
+    double amount = p.weight * 40;
+
+    if (express)
+        amount += 20;
+
+    if (insured)
+        amount += 10;
+
+    cout << "Parcel overload selected. ";
+    return amount;
+}
+
+int main()
+{
+    Parcel p = {3.0};
+
+    cout << "Charge 1: Rs " << charge(2) << '\n';
+    cout << "Charge 2: Rs " << charge(2.0f) << '\n';
+    cout << "Charge 3: Rs " << charge(500) << '\n';
+    cout << "Charge 4: Rs " << charge(1.5) << '\n';
+    cout << "Charge 5: Rs " << charge(2, true) << '\n';
+    cout << "Charge 6: Rs " << charge(p) << '\n';
+
+    return 0;
+}
+```
+
+## 4. Predicted Output
+
+```text
+Charge 1: Integer overload selected. 0.08
+Charge 2: Double overload selected. 80
+Charge 3: Integer overload selected. 20
+Charge 4: Double overload selected. 60
+Charge 5: Integer overload selected. 20.08
+Charge 6: Parcel overload selected. 120
+```
+
+## 5. Explanation of the Six Function Calls
+
+**1. `charge(2)`**
+
+- The argument is an integer.
+- The integer overload is selected because it is an exact match.
+- The default values for express and insurance are both false.
+
+**2. `charge(2.0f)`**
+
+- The argument is a float.
+- Float is promoted to double.
+- Therefore, the double overload is selected.
+
+**3. `charge(500)`**
+
+- The argument is an integer representing grams.
+- The integer overload is selected.
+
+**4. `charge(1.5)`**
+
+- The argument is a double representing kilograms.
+- The double overload is selected as an exact match.
+
+**5. `charge(2, true)`**
+
+- The first argument is an integer and the second argument enables express delivery.
+- The integer overload is selected.
+- Insurance uses its default value of false.
+
+**6. `charge(p)`**
+
+- The argument is a Parcel object.
+- The Parcel overload is selected.
+
+## 6. How Does the Compiler Choose an Overloaded Function?
+
+The compiler generally follows these matching rules:
+
+1. **Exact match:** The argument type matches the parameter type directly.
+2. **Promotion:** A smaller type is promoted to a suitable larger type, such as float to double.
+3. **Conversion:** The compiler converts one type into another, such as int to double.
+
+The compiler prefers the best available match.
+
+### Why must default arguments be given from the right?
+
+Default arguments must be specified from right to left.
+
+Correct:
+
+```cpp
+void display(int a, int b = 10, int c = 20);
+```
+
+Incorrect:
+
+```cpp
+void display(int a = 5, int b, int c = 20);
+```
+
+This is because once a parameter has a default value, the parameters following it must also have default values.
+
+## 7. Alternative Concept – Using a Parcel Structure
+
+Instead of creating multiple overloaded functions, we can use a single Parcel structure containing all the required information.
+
+Example:
+
+```cpp
+struct Parcel
+{
+    double weight;
+    bool express;
+    bool insured;
+};
+
+double calculateCharge(Parcel p)
+{
+    double amount = p.weight * 40;
+
+    if (p.express)
+        amount += 20;
+
+    if (p.insured)
+        amount += 10;
+
+    return amount;
+}
+```
+
+Calling code:
+
+```cpp
+Parcel p = {2.0, true, false};
+
+cout << calculateCharge(p);
+```
+
+In this approach, all the parcel details are stored in one object and passed to a single function.
+
+### Complexity Analysis
+
+**Function Overloading:**
+- Time complexity of calculating the charge: O(1).
+- Space complexity: O(1) for a fixed number of parameters.
+- Overload resolution happens during compilation and does not add runtime cost.
+
+**Parcel Structure:**
+- Time complexity: O(1).
+- Space complexity: O(1) for the fixed-size structure.
+- The structure may be copied when passed by value.
+
+### Comparison
+
+| Feature | Function Overloading | Parcel Structure |
+|---|---|---|
+| Functions | Multiple functions | One function |
+| Input handling | Different parameter types | One Parcel object |
+| Time complexity | O(1) | O(1) |
+| Adding new options | May require changing function parameters | Add a field to the structure |
+| Ease of use | Suitable for different input types | Keeps related details together |
+
+## 8. Conclusion
+
+Function overloading allows the same function name to handle different types of inputs. Default arguments make common function calls shorter. By using different parameter types for grams, kilograms and Parcel objects, ambiguity can be avoided. A Parcel structure is another useful approach when more options need to be added in the future.
