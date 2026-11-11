@@ -89,3 +89,64 @@ int main()
 
     std::cout << "Issued: " << BusTicket::count() << '\n';
 }
+
+*/Creating Tickets Inside a Function Called Twice/*
+
+#include <iostream>
+using namespace std;
+
+class BusTicket
+{
+    static int issued;
+    static const int CAPACITY = 3;
+
+    int seat;
+
+public:
+    BusTicket()
+    {
+        seat = 0;
+
+        if (issued < CAPACITY)
+        {
+            issued++;
+            seat = issued;
+        }
+    }
+
+    void print()
+    {
+        if (seat == 0)
+            cout << "Waiting\n";
+        else
+            cout << "Seat " << seat << '\n';
+    }
+
+    static int count()
+    {
+        return issued;
+    }
+};
+
+int BusTicket::issued = 0;
+
+void createTickets()
+{
+    BusTicket t[2];
+
+    for (int i = 0; i < 2; i++)
+        t[i].print();
+
+    cout << "Issued: " << BusTicket::count() << '\n';
+}
+
+int main()
+{
+    cout << "First call:\n";
+    createTickets();
+
+    cout << "Second call:\n";
+    createTickets();
+
+    return 0;
+}
