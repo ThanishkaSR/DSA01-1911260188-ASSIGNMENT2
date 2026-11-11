@@ -1,0 +1,223 @@
+## 1. Introduction
+
+A bank wants to store the last 10 transactions of each savings account so that customers can view them through an ATM mini-statement.
+
+For this purpose, a class named `SavingsAccount` is created. It contains the account number, balance, an array of 10 transactions and a transaction count.
+
+The older transactions are removed when new transactions are added beyond the limit.
+
+## 2. Class Specification
+
+The class contains the following private data members:
+
+- `accountNumber` – Stores the account number.
+- `balance` – Stores the current account balance.
+- `transactions[10]` – Stores the last 10 transactions.
+- `count` – Keeps track of the number of stored transactions.
+
+The public member functions are:
+
+- `deposit()` – Adds money to the account.
+- `withdraw()` – Withdraws money from the account.
+- `miniStatement()` – Displays the last 10 transactions.
+
+## 3. C++ Program
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class SavingsAccount
+{
+private:
+    int accountNumber;
+    double balance;
+    double transactions[10];
+    int count;
+
+    // Defined inside the class
+    void addTransaction(double amount)
+    {
+        if (count < 10)
+        {
+            transactions[count] = amount;
+            count++;
+        }
+        else
+        {
+            for (int i = 0; i < 9; i++)
+                transactions[i] = transactions[i + 1];
+
+            transactions[9] = amount;
+        }
+    }
+
+public:
+    SavingsAccount(int acc, double bal)
+    {
+        accountNumber = acc;
+        balance = bal;
+        count = 0;
+    }
+
+    // Function declarations
+    void deposit(double amount);
+    void withdraw(double amount);
+    void miniStatement();
+};
+
+// Defined outside the class
+void SavingsAccount::deposit(double amount)
+{
+    if (amount > 0)
+    {
+        balance += amount;
+        addTransaction(amount);
+        cout << "Deposit successful\n";
+    }
+    else
+        cout << "Invalid deposit\n";
+}
+
+void SavingsAccount::withdraw(double amount)
+{
+    if (amount > 0 && amount <= balance)
+    {
+        balance -= amount;
+        addTransaction(-amount);
+        cout << "Withdrawal successful\n";
+    }
+    else
+        cout << "Invalid withdrawal\n";
+}
+
+void SavingsAccount::miniStatement()
+{
+    cout << "\nAccount Number: " << accountNumber << '\n';
+    cout << "Current Balance: Rs " << balance << '\n';
+    cout << "Last Transactions:\n";
+
+    for (int i = 0; i < count; i++)
+        cout << transactions[i] << '\n';
+}
+
+int main()
+{
+    SavingsAccount account(101, 5000);
+
+    account.deposit(1000);
+    account.withdraw(500);
+    account.deposit(2000);
+    account.withdraw(300);
+
+    account.miniStatement();
+
+    return 0;
+}
+```
+
+## 4. Predicted Output
+
+```text
+Deposit successful
+Withdrawal successful
+Deposit successful
+Withdrawal successful
+
+Account Number: 101
+Current Balance: Rs 7200
+Last Transactions:
+1000
+-500
+2000
+-300
+```
+
+## 5. Explanation
+
+- The constructor initializes the account number, balance and transaction count.
+- The `deposit()` function increases the balance and stores the deposit.
+- The `withdraw()` function decreases the balance and stores the withdrawal as a negative value.
+- The `addTransaction()` function stores each transaction in the array.
+- The `miniStatement()` function displays the account details and stored transactions.
+
+Some functions are defined inside the class, while `deposit()`, `withdraw()` and `miniStatement()` are defined outside using the scope resolution operator `::`.
+
+## 6. Inquiry – Why Should the Array Be Private?
+
+The transaction array should be private because it contains important account information.
+
+If it is public, other parts of the program can directly change or delete transaction details. Keeping it private protects the data and allows changes only through the class member functions.
+
+### What Happens When the 11th Transaction Arrives?
+
+**Method 1 – Shifting the Array**
+
+When the array is full, all existing transactions are shifted one position to the left. The oldest transaction is removed, and the new transaction is inserted at the last position.
+
+- Time complexity: O(k), where k is the number of stored transactions.
+- Space complexity: O(1) extra space.
+
+**Method 2 – Circular Index**
+
+Instead of shifting all elements, a circular index points to the oldest transaction. When a new transaction arrives, it replaces the oldest one, and the index moves to the next position.
+
+- Time complexity: O(1).
+- Space complexity: O(1) extra space.
+
+## 7. Design Decision – Increasing the Limit to 50 Transactions
+
+If the bank wants to store the last 50 transactions, I would prefer the circular index method.
+
+The array size can be changed from 10 to 50, and the circular index can manage the transactions without shifting all the elements.
+
+This makes adding new transactions faster, especially when many transactions are performed.
+
+## 8. Alternative Concept – Using std::deque
+
+Another option is to use `std::deque` to store the transactions.
+
+When a new transaction arrives, `push_back()` adds it to the end. If the number of transactions exceeds 10, `pop_front()` removes the oldest transaction.
+
+Example:
+
+```cpp
+#include <iostream>
+#include <deque>
+using namespace std;
+
+int main()
+{
+    deque<double> transactions;
+
+    transactions.push_back(1000);
+    transactions.push_back(-500);
+    transactions.push_back(2000);
+
+    while (transactions.size() > 10)
+        transactions.pop_front();
+
+    for (int i = 0; i < transactions.size(); i++)
+        cout << transactions[i] << '\n';
+
+    return 0;
+}
+```
+
+### Complexity Analysis
+
+**Fixed Array with Shifting:**
+- Adding a transaction when full takes O(k) time.
+- Uses O(k) space for storing k transactions.
+
+**Circular Buffer:**
+- Adding a transaction takes O(1) time.
+- Uses O(k) space for storing k transactions.
+
+**std::deque:**
+- Adding at the back and removing from the front take O(1) time per operation on average.
+- Uses O(k) space for storing k transactions.
+
+## 9. Conclusion
+
+This task helped me understand how arrays can be used inside a class to store transaction details. Keeping the array private protects the account information. A circular buffer is a better choice when transactions are added frequently because it avoids shifting all the elements.
