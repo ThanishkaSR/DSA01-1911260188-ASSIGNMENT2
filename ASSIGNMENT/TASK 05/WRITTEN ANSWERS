@@ -1,0 +1,321 @@
+# Q5 – Static Members and Arrays of Objects
+
+## 1. Introduction
+
+A college bus has a fixed number of seats. Each `BusTicket` object receives a seat number when created. If all seats are filled, the remaining tickets are placed on a waiting list.
+
+The transport office also needs to know the total number of seats issued.
+
+For this purpose, we use **static data members**, which are shared by all objects of a class.
+
+## 2. Class Design
+
+The following members are used:
+
+- `issued` – A static data member that stores the total number of seats issued.
+- `CAPACITY` – A static constant that stores the maximum number of seats.
+- `seat` – Stores the seat number of an individual ticket.
+- `name` – Stores the passenger's name.
+- `count()` – A static member function that returns the number of seats issued.
+- `print()` – Displays the passenger's seat number or waiting-list status.
+
+### Why is `issued` static?
+
+The seat count belongs to the entire class, not to an individual ticket. Therefore, only one shared counter is required, even when many objects are created.
+
+### Where is a static data member defined?
+
+A static data member is declared inside the class and defined outside the class.
+
+Example:
+
+```cpp
+class BusTicket
+{
+    static int issued;
+};
+
+int BusTicket::issued = 0;
+```
+
+## 3. Why Can't a Static Member Function Use `this`?
+
+A static member function belongs to the class itself and can be called without creating an object.
+
+Therefore, it does not have a `this` pointer.
+
+It cannot directly access non-static data members because those members belong to individual objects. It can access static members because they are shared by the entire class.
+
+## 4. Predict the Output
+
+### Given Program
+
+```cpp
+#include <iostream>
+
+class Token
+{
+    static int next;
+    int id;
+
+public:
+    Token()
+    {
+        id = ++next;
+    }
+
+    int get() const
+    {
+        return id;
+    }
+
+    static int issued()
+    {
+        return next - 100;
+    }
+};
+
+int Token::next = 100;
+
+int main()
+{
+    Token counter[3];
+
+    Token extra;
+
+    std::cout << counter[0].get() << ' '
+              << counter[2].get() << ' '
+              << extra.get() << ' '
+              << Token::issued() << '\n';
+}
+```
+
+### My Predicted Output
+
+```text
+101 103 104 4
+```
+
+### Explanation
+
+- The static variable `next` starts at 100.
+- Three objects are created in the array `counter`.
+- One additional object named `extra` is created.
+- Every time the constructor runs, `next` increases by 1.
+- Therefore, the IDs are 101, 102, 103 and 104.
+- The `issued()` function returns `104 - 100 = 4`.
+
+The constructor runs **4 times** in total.
+
+## 5. Complete the Code
+
+### Completed TODO 1 and TODO 2
+
+```cpp
+#include <iostream>
+#include <string>
+
+class BusTicket
+{
+    static int issued;
+    static const int CAPACITY = 3;
+
+    int seat;
+    std::string name;
+
+public:
+    explicit BusTicket(const std::string& n) : seat(0), name(n)
+    {
+        // TODO 1
+        if (issued < CAPACITY)
+        {
+            issued++;
+            seat = issued;
+        }
+    }
+
+    static int count()
+    {
+        // TODO 2
+        return issued;
+    }
+
+    void print() const
+    {
+        std::cout << name << ": "
+                  << (seat ? "Seat " + std::to_string(seat)
+                           : std::string("Waiting"))
+                  << '\n';
+    }
+};
+
+int BusTicket::issued = 0;
+
+int main()
+{
+    BusTicket trip[4] = {
+        BusTicket("Asha"),
+        BusTicket("Bala"),
+        BusTicket("Chitra"),
+        BusTicket("Dev")
+    };
+
+    for (const BusTicket& t : trip)
+        t.print();
+
+    std::cout << "Issued: " << BusTicket::count() << '\n';
+}
+```
+
+### Explanation of TODOs
+
+**TODO 1:**
+
+- Checks whether the number of issued seats is less than the capacity.
+- If seats are available, the counter is increased.
+- The updated counter is assigned as the seat number.
+- If all seats are occupied, the ticket remains at seat number 0 and is placed on the waiting list.
+
+**TODO 2:**
+
+Returns the value of the static variable `issued`, which stores the total number of seats issued.
+
+### Expected Output
+
+```text
+Asha: Seat 1
+Bala: Seat 2
+Chitra: Seat 3
+Dev: Waiting
+Issued: 3
+```
+
+## 6. Creating Tickets Inside a Function Called Twice
+
+When tickets are created inside a function, the static counter retains its value even after the function finishes.
+
+The following is a separate program to demonstrate this:
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class BusTicket
+{
+    static int issued;
+    static const int CAPACITY = 3;
+
+    int seat;
+
+public:
+    BusTicket()
+    {
+        seat = 0;
+
+        if (issued < CAPACITY)
+        {
+            issued++;
+            seat = issued;
+        }
+    }
+
+    void print()
+    {
+        if (seat == 0)
+            cout << "Waiting\n";
+        else
+            cout << "Seat " << seat << '\n';
+    }
+
+    static int count()
+    {
+        return issued;
+    }
+};
+
+int BusTicket::issued = 0;
+
+void createTickets()
+{
+    BusTicket t[2];
+
+    for (int i = 0; i < 2; i++)
+        t[i].print();
+
+    cout << "Issued: " << BusTicket::count() << '\n';
+}
+
+int main()
+{
+    cout << "First call:\n";
+    createTickets();
+
+    cout << "Second call:\n";
+    createTickets();
+
+    return 0;
+}
+```
+
+### Predicted Output
+
+```text
+First call:
+Seat 1
+Seat 2
+Issued: 2
+Second call:
+Seat 3
+Waiting
+Issued: 3
+```
+
+### Explanation
+
+During the first function call, two tickets receive seats 1 and 2.
+
+During the second call, the static counter still contains 2. Therefore, the first ticket receives seat 3, while the next ticket goes to the waiting list.
+
+The counter does not reset when the function ends because it is static.
+
+## 7. Alternative Concept – Global Variable and TicketOffice Object
+
+Instead of using a static data member, the seat counter can be maintained using a global variable or a separate `TicketOffice` object.
+
+### A. Using a Global Variable
+
+```cpp
+int issued = 0;
+```
+
+All ticket objects can access this common variable to check the number of seats issued.
+
+However, a global variable can be accessed and modified from different parts of the program, which makes data protection difficult.
+
+### B. Using a TicketOffice Object
+
+A separate `TicketOffice` class can store the counter.
+
+Each `BusTicket` object can receive the `TicketOffice` object and use it to check seat availability.
+
+This approach is useful when different buses need separate seat counters.
+
+## 8. Complexity Analysis
+
+| Method | Time Complexity | Space Complexity |
+|---|---|---|
+| Static counter | O(1) | O(1) |
+| Global counter | O(1) | O(1) |
+| TicketOffice object | O(1) | O(1) |
+
+All three methods use constant time to check and update the seat count.
+
+### Comparison
+
+- **Static counter:** Easy to manage because the counter belongs to the class. However, all objects share the same counter.
+- **Global variable:** Simple to use, but it is less secure because it can be accessed from anywhere.
+- **TicketOffice object:** Provides better separation and allows two buses to maintain independent seat counters.
+
+## 9. Conclusion
+
+This task helped me understand how static data members store information shared by all objects. I also learned how static member functions access shared data and how arrays of objects can be created. For a single bus, a static counter is a simple solution. For multiple buses, a separate `TicketOffice` object is more suitable.
