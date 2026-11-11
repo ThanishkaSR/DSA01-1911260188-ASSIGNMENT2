@@ -1,0 +1,351 @@
+# Q6 – Friend Functions and Inline Functions
+
+## 1. Introduction
+
+A train journey planner stores departure and arrival times using a class named `Time`.
+
+The class contains hours and minutes as private data members. It needs to calculate the difference between two times and check which time is earlier.
+
+Friend functions are used to access the private data of two objects and compare them.
+
+## 2. Why Is a Friend Function Needed?
+
+A friend function is useful when a function needs to work with two objects equally.
+
+For example, `minutesBetween()` receives two `Time` objects and calculates the difference between them.
+
+A friend function:
+
+- Is not a member of the class.
+- Can access private and public members of the class.
+- Is called like a normal function.
+- Is declared inside the class using the `friend` keyword.
+
+### Difference Between Friend Function and Member Function
+
+**Friend Function:**
+- Declared inside the class using `friend`.
+- Defined outside the class.
+- Called using the function name and two objects.
+- Can access private members.
+
+**Member Function:**
+- Belongs to the class.
+- Called using an object and the dot operator.
+- Can directly access private members of its own class.
+
+## 3. Complete the Code
+
+### Completed TODO 1 and TODO 2
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Time
+{
+    int h, m;
+
+public:
+    Time(int hh, int mm) : h(hh), m(mm) {}
+
+    friend int minutesBetween(const Time& a, const Time& b);
+
+    friend bool earlier(const Time& a, const Time& b);
+};
+
+int minutesBetween(const Time& a, const Time& b)
+{
+    // TODO 1
+    int time1 = a.h * 60 + a.m;
+    int time2 = b.h * 60 + b.m;
+
+    int difference = time1 - time2;
+
+    if (difference < 0)
+        difference = -difference;
+
+    return difference;
+}
+
+bool earlier(const Time& a, const Time& b)
+{
+    // TODO 2
+    if (a.h < b.h)
+        return true;
+
+    if (a.h == b.h && a.m < b.m)
+        return true;
+
+    return false;
+}
+
+int main()
+{
+    Time departure(9, 45), arrival(13, 10);
+
+    cout << minutesBetween(departure, arrival) << ' '
+         << boolalpha << earlier(arrival, departure) << '\n';
+
+    return 0;
+}
+```
+
+### Expected Output
+
+```text
+205 false
+```
+
+### Explanation
+
+**TODO 1 – minutesBetween():**
+
+- Converts the first time into minutes: `9 × 60 + 45 = 585`.
+- Converts the second time into minutes: `13 × 60 + 10 = 790`.
+- Calculates the difference: `790 - 585 = 205`.
+- Returns the absolute difference.
+
+**TODO 2 – earlier():**
+
+- Compares the hours first.
+- If the hours are equal, it compares the minutes.
+- Returns `true` if the first time is earlier; otherwise, returns `false`.
+
+The output is `false` because 13:10 is not earlier than 9:45.
+
+## 4. Correctness Check
+
+The program should also be tested with times on either side of noon and with the same time twice.
+
+### Test Program
+
+Add these statements inside `main()` after the first output:
+
+```cpp
+Time morning(11, 30), afternoon(12, 30);
+Time same1(10, 15), same2(10, 15);
+
+cout << minutesBetween(morning, afternoon) << ' '
+     << earlier(morning, afternoon) << '\n';
+
+cout << minutesBetween(same1, same2) << ' '
+     << earlier(same1, same2) << '\n';
+```
+
+### Predicted Output for Additional Tests
+
+```text
+60 1
+0 0
+```
+
+### Explanation
+
+- Between 11:30 AM and 12:30 PM, the difference is 60 minutes. The morning time is earlier.
+- When both times are 10:15 AM, the difference is 0 minutes. Neither time is earlier than the other.
+
+## 5. Inline Functions
+
+An inline function is a small function for which the `inline` keyword suggests that the compiler may replace the function call with the actual function code.
+
+This can reduce function-call overhead in some situations.
+
+However, the compiler decides whether to actually inline the function. Writing `inline` does not guarantee it.
+
+Example:
+
+```cpp
+inline int add(int a, int b)
+{
+    return a + b;
+}
+```
+
+For this train planner, small functions such as time comparison may be suitable candidates for inline functions because they are called frequently.
+
+## 6. What Would Be Lost If Private Members Were Made Public?
+
+If `h` and `m` were made public, other parts of the program could directly change the hours and minutes.
+
+This would reduce data protection and could allow invalid values such as 25 hours or 80 minutes.
+
+Keeping them private protects the data and allows the class to control how values are accessed.
+
+## 7. Growth Investigation – Measuring 10,000,000 Calls
+
+The assignment asks us to measure 10,000,000 function calls using:
+
+- Without inline and with `-O0`.
+- With inline and with `-O0`.
+- Without inline and with `-O2`.
+- With inline and with `-O2`.
+
+The following code can be used for the experiment.
+
+```cpp
+#include <iostream>
+#include <chrono>
+using namespace std;
+using namespace chrono;
+
+int addNormal(int a, int b)
+{
+    return a + b;
+}
+
+inline int addInline(int a, int b)
+{
+    return a + b;
+}
+
+int main()
+{
+    const int n = 10000000;
+    volatile int result = 0;
+
+    auto start = high_resolution_clock::now();
+
+    for (int i = 0; i < n; i++)
+        result = addNormal(i, 2);
+
+    auto end = high_resolution_clock::now();
+
+    cout << "Normal function time: "
+         << duration_cast<microseconds>(end - start).count()
+         << " microseconds\n";
+
+    start = high_resolution_clock::now();
+
+    for (int i = 0; i < n; i++)
+        result = addInline(i, 2);
+
+    end = high_resolution_clock::now();
+
+    cout << "Inline function time: "
+         << duration_cast<microseconds>(end - start).count()
+         << " microseconds\n";
+
+    cout << "Result: " << result << '\n';
+
+    return 0;
+}
+```
+
+### How to Perform the Experiment
+
+Compile the program four times using a local g++ compiler:
+
+```bash
+g++ -std=c++17 -O0 timing.cpp -o timing
+```
+
+```bash
+g++ -std=c++17 -O2 timing.cpp -o timing
+```
+
+For a fair comparison, make two versions of the program: one using `addNormal()` in both measured loops and another using `addInline()` in both loops. Compile and run both versions at each optimisation level.
+
+Record the actual execution times in your report.
+
+### Expected Observation
+
+- At `-O0`, the normal function may have more function-call overhead.
+- At `-O2`, the compiler may optimise both functions, making their execution times similar.
+- The `inline` keyword does not guarantee better performance.
+
+The actual timings depend on the computer and compiler, so they must be measured rather than assumed.
+
+## 8. Alternative Concept – Member Functions and Getters
+
+Instead of using friend functions, the comparison can be performed using member functions.
+
+Example:
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Time
+{
+private:
+    int h, m;
+
+public:
+    Time(int hh, int mm)
+    {
+        h = hh;
+        m = mm;
+    }
+
+    int minutesTo(const Time& b)
+    {
+        int t1 = h * 60 + m;
+        int t2 = b.h * 60 + b.m;
+
+        int diff = t1 - t2;
+
+        if (diff < 0)
+            diff = -diff;
+
+        return diff;
+    }
+
+    bool isEarlier(const Time& b)
+    {
+        if (h < b.h)
+            return true;
+
+        if (h == b.h && m < b.m)
+            return true;
+
+        return false;
+    }
+};
+
+int main()
+{
+    Time departure(9, 45), arrival(13, 10);
+
+    cout << departure.minutesTo(arrival) << ' '
+         << boolalpha << departure.isEarlier(arrival);
+
+    return 0;
+}
+```
+
+Here, the functions are called using an object and the dot operator.
+
+Another alternative is to provide public getter functions for hours and minutes. Normal external functions can then use those getters to compare the objects without directly accessing private data.
+
+### Complexity Analysis
+
+All three approaches perform a fixed number of operations.
+
+- Friend functions: O(1) time per call.
+- Member functions: O(1) time per call.
+- Getter functions: O(1) time per call.
+
+The extra space used by each approach is O(1).
+
+### Comparison
+
+| Method | Access to private data | Encapsulation |
+|---|---|---|
+| Friend functions | Direct access | Private data is maintained |
+| Member functions | Direct access | Private data is maintained |
+| Public getters | Access through functions | Private data is maintained |
+
+The time complexity remains O(1) for all three approaches. The actual execution time should be compared using the required compiler settings.
+
+## 9. Deployment Decision
+
+I would keep the friend functions for this train journey planner because the comparison involves two `Time` objects equally.
+
+They can directly access the private hours and minutes without making the data public.
+
+However, member functions are also a good choice if the comparison is considered an operation belonging to one `Time` object.
+
+## 10. Conclusion
+
+This task helped me understand friend functions and inline functions in C++. Friend functions can access private members of a class, while member functions belong to the class itself. Inline functions may reduce function-call overhead for small operations, but the compiler decides whether to inline them.
