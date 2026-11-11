@@ -1,1 +1,219 @@
+# TASK 7 – DIAGNOSE, REDESIGN AND VALIDATE
 
+**Selected Program:** Task 4 – Savings Account Transaction Array
+
+## A. Diagnose the Limitation – 2 Marks
+
+The original Savings Account program uses a fixed array of size 10 to store the last 10 transactions.
+
+When the array becomes full and a new transaction is added, the program shifts all 9 existing elements one position to the left. The new transaction is then stored at the last position.
+
+**Limitation identified:**
+
+- Shifting multiple elements takes extra time.
+- Every new transaction after the array becomes full requires 9 assignments.
+- If the transaction storage capacity is increased, the number of shifting operations also increases.
+
+**Evidence from the original program:**
+
+When 12 transactions are added, the program performs shifting for transactions 11 and 12.
+
+Therefore, it performs:
+
+\[
+2 \times 9 = 18 \text{ element assignments}
+\]
+
+This shows that repeated shifting can be avoided.
+
+## B. Define the Design Objective – 2 Marks
+
+The objective is to redesign the transaction storage so that:
+
+1. The account stores only the latest 10 transactions.
+2. New transactions can be added without shifting existing elements.
+3. The transaction history is displayed in the correct order.
+4. The program produces the same transaction history as the original program.
+
+**Measurable objective:** Reduce the number of element assignments required to insert a new transaction after the array becomes full from 9 assignments to 1 assignment.
+
+## C. Design the Revised Solution – 4 Marks
+
+### Proposed Design: Circular Array
+
+A circular array reuses the same 10 array positions.
+
+Instead of shifting elements, the program inserts a new transaction at the next available position. After reaching the last position, it returns to the first position.
+
+**Changes made:**
+
+- The fixed array of 10 elements is retained.
+- A variable called `nextIndex` stores the position where the next transaction should be inserted.
+- Each new transaction is stored directly at that position.
+- The index moves to the next position using the modulo operator `%`.
+- The latest 10 transactions are displayed in chronological order.
+
+### Pseudocode
+
+```text
+Create an array of size 10
+Set nextIndex = 0
+Set count = 0
+
+When a transaction is added:
+    Store it at nextIndex
+    Move nextIndex to the next position
+    If nextIndex reaches 10, return to 0
+    If count is less than 10, increase count
+
+To display transactions:
+    Find the oldest transaction
+    Display count transactions in order
+```
+
+### Revised C++ Program
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class SavingsAccount {
+private:
+    double transactions[10];
+    int count;
+    int nextIndex;
+
+public:
+    SavingsAccount() {
+        count = 0;
+        nextIndex = 0;
+    }
+
+    void addTransaction(double amount) {
+        transactions[nextIndex] = amount;
+
+        nextIndex = (nextIndex + 1) % 10;
+
+        if (count < 10) {
+            count++;
+        }
+    }
+
+    void miniStatement() {
+        cout << "Last Transactions:" << endl;
+
+        int start = (nextIndex - count + 10) % 10;
+
+        for (int i = 0; i < count; i++) {
+            cout << transactions[(start + i) % 10] << endl;
+        }
+    }
+};
+
+int main() {
+    SavingsAccount account;
+
+    account.addTransaction(100);
+    account.addTransaction(-50);
+    account.addTransaction(200);
+    account.addTransaction(-30);
+    account.addTransaction(150);
+    account.addTransaction(-40);
+    account.addTransaction(300);
+    account.addTransaction(-60);
+    account.addTransaction(250);
+    account.addTransaction(-70);
+    account.addTransaction(400);
+    account.addTransaction(-80);
+
+    account.miniStatement();
+
+    return 0;
+}
+```
+
+### Expected Output
+
+```text
+Last Transactions:
+200
+-30
+150
+-40
+300
+-60
+250
+-70
+400
+-80
+```
+
+### Memory Requirement and Trade-off
+
+- The redesigned program uses the same fixed array of 10 elements.
+- Only one additional integer variable, `nextIndex`, is required.
+- No extra array or library is needed.
+- The program becomes slightly more complex because the transactions must be displayed in chronological order.
+
+## D. Predict Before Implementing – 1 Mark
+
+I predict that the circular array will reduce the insertion work after the array becomes full.
+
+- Original design: 9 element assignments for every new transaction after the array is full.
+- Redesigned design: 1 element assignment for every new transaction.
+
+The redesigned program should produce the same latest 10 transactions while avoiding repeated shifting.
+
+## E. Implement and Validate the Redesign – 2 Marks
+
+Both programs are tested using the same 12 transactions.
+
+| Measurement | Original Design | Redesigned Design |
+|---|---:|---:|
+| Array capacity | 10 | 10 |
+| Transactions added | 12 | 12 |
+| Transactions retained | 10 | 10 |
+| Assignments for transaction 11 | 10 | 1 |
+| Assignments for transaction 12 | 10 | 1 |
+| Total assignments for these 12 insertions | 29 | 12 |
+
+*Note: The original performs 9 shifts and 1 insertion for each of the last two transactions. Both designs perform 12 initial insertions in total.*
+
+**Validation steps:**
+
+1. Execute the original program with the 12 transactions.
+2. Execute the redesigned program with the same transactions.
+3. Compare their final transaction histories.
+4. Check that both display the same latest 10 transactions.
+5. Compare the number of element assignments.
+
+**Actual execution evidence:**
+
+- Original program output screenshot: Attach here.
+- Redesigned program output screenshot: Attach here.
+- Comparison of execution measurements: Record your actual results here.
+
+## F. Defend the Final Design – 2 Marks
+
+The redesigned circular array successfully addresses the repeated-shifting limitation.
+
+**Advantages:**
+
+- New transactions are inserted without shifting existing elements.
+- Only one array position is updated for each insertion.
+- The latest 10 transactions are maintained.
+- The memory requirement remains almost the same.
+
+**Disadvantages:**
+
+- The display logic is slightly more complicated.
+- The program requires an additional index variable.
+- It stores only the latest 10 transactions and does not maintain the complete transaction history.
+
+**When the original design may be preferable:**
+
+The original design is easier for beginners to understand and is suitable when the number of transactions is small.
+
+**Final Conclusion:**
+
+The circular array is a better choice when transactions are added frequently because it avoids unnecessary shifting. It achieves the redesign objective while maintaining the same storage capacity and output requirement. Therefore, I would prefer the circular array for this application.
