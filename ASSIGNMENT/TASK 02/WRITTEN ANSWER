@@ -1,0 +1,185 @@
+# Q2 – Return by Reference and Its Dangers
+
+## 1. Introduction
+
+In an examination marks register, marks are stored in an array. We need to find the highest mark and increase it by 2 during moderation.
+
+In C++, a function can return a reference to an existing variable. This allows the caller to directly modify the original array element.
+
+## 2. C++ Program
+
+```cpp
+#include <iostream>
+using namespace std;
+
+// Returns a reference to the highest mark
+int& highestMark(int marks[], int n)
+{
+    int maxIndex = 0;
+
+    for (int i = 1; i < n; i++)
+    {
+        if (marks[i] > marks[maxIndex])
+            maxIndex = i;
+    }
+
+    return marks[maxIndex];
+}
+
+// Returns a reference to a local variable (unsafe)
+int& wrongFunction()
+{
+    int x = 50;
+    return x;
+}
+
+int main()
+{
+    int marks[5] = {75, 82, 90, 68, 85};
+
+    cout << "Highest mark: " << highestMark(marks, 5) << '\n';
+
+    highestMark(marks, 5) += 2;
+
+    cout << "After moderation: " << highestMark(marks, 5) << '\n';
+
+    cout << "\nUpdated marks: ";
+    for (int i = 0; i < 5; i++)
+        cout << marks[i] << " ";
+
+    cout << '\n';
+
+    return 0;
+}
+```
+
+### Predicted Output
+
+```text
+Highest mark: 90
+After moderation: 92
+
+Updated marks: 75 82 92 68 85
+```
+
+### Explanation
+
+- The function searches the array and finds the highest mark.
+- It returns a reference to the original array element.
+- Using `highestMark(marks, 5) += 2` directly increases that element by 2.
+- Therefore, the original array is also updated.
+
+## 3. Returning a Reference to a Local Variable
+
+The function `wrongFunction()` creates a local variable `x` and returns its reference.
+
+This is unsafe because the local variable is destroyed when the function ends. The returned reference becomes a dangling reference.
+
+The compiler may display a warning such as:
+
+```text
+warning: reference to local variable 'x' returned
+```
+
+Using this reference results in undefined behaviour because it refers to an object whose lifetime has ended.
+
+**Important:** The unsafe function is included to demonstrate the problem, but it is not called in the program.
+
+## 4. Difference Between Reference, Const Reference and Copy
+
+- **Returning a reference (`int&`):** Allows the caller to modify the original array element.
+- **Returning a const reference (`const int&`):** Allows the caller to read the original element but not modify it.
+- **Returning a copy (`int`):** Returns a separate value. Changes to the returned value do not affect the original array.
+
+Example:
+
+```cpp
+const int& readHighest(int marks[], int n)
+{
+    int maxIndex = 0;
+
+    for (int i = 1; i < n; i++)
+        if (marks[i] > marks[maxIndex])
+            maxIndex = i;
+
+    return marks[maxIndex];
+}
+```
+
+The array must remain valid while the returned reference is being used.
+
+## 5. Changed Condition – Using std::vector
+
+If the marks are stored in a `std::vector`, adding new elements may cause the vector to allocate new memory.
+
+When this happens, existing references and pointers to its elements may become invalid.
+
+For example:
+
+```cpp
+vector<int> marks = {75, 82, 90};
+
+int& highest = marks[2];
+
+marks.push_back(95);
+```
+
+If `push_back()` causes reallocation, `highest` becomes invalid. Therefore, it should not be used after such an operation.
+
+To avoid this problem, the highest mark can be found again after the vector grows.
+
+## 6. Alternative Concepts
+
+Instead of returning a reference, the function can return an index or a pointer.
+
+### A. Returning an Index
+
+```cpp
+int highestIndex(int marks[], int n)
+{
+    int maxIndex = 0;
+
+    for (int i = 1; i < n; i++)
+        if (marks[i] > marks[maxIndex])
+            maxIndex = i;
+
+    return maxIndex;
+}
+```
+
+Calling code:
+
+```cpp
+int index = highestIndex(marks, 5);
+marks[index] += 2;
+```
+
+### B. Returning a Pointer
+
+```cpp
+int* highestPointer(int marks[], int n)
+{
+    int maxIndex = 0;
+
+    for (int i = 1; i < n; i++)
+        if (marks[i] > marks[maxIndex])
+            maxIndex = i;
+
+    return &marks[maxIndex];
+}
+```
+
+Calling code:
+
+```cpp
+int* p = highestPointer(marks, 5);
+*p += 2;
+```
+
+Both methods allow the caller to modify the original array element.
+
+## 7. Complexity Analysis
+
+All three methods require searching the array to find the highest mark.
+
+- **Time Complexity:** O(n), because every
